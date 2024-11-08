@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nhận diện giọng nói</title>
+</head>
+<body>
+    <h1>Nhận diện giọng nói</h1>
+    <button id="recordBtn">Ghi âm và nhận diện</button>
+    <p id="result"></p>
+
+    <script>
+        document.getElementById('recordBtn').addEventListener('click', function() {
+            fetch('/predict', { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('result').innerText = `Kết quả: ${data.result}`;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
