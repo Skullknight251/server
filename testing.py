@@ -1,9 +1,8 @@
 import os
 import librosa
 import numpy as np
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, request, jsonify
 from tensorflow.keras.models import load_model
-import pyaudio
 import wave
 
 app = Flask(__name__)
@@ -36,58 +35,24 @@ def predict_speaker_or_unknown(file_path, threshold=0.7):
     else:
         return "Người đã biết"
 
-# Route chính để ghi âm và nhận diện người nói
-@app.route('/')
-def index():
-    return render_template('index.html')
-
+# Route để nhận file WAV và trả về kết quả dự đoán
 @app.route('/predict', methods=['POST'])
 def predict():
-    # Ghi âm giọng nói
-    file_path = "data/recorded.wav"
-    # record_voice(file_path)
-    
-    # # Dự đoán giọng nói từ file đã ghi âm
+    if 'file' not in request.files:
+        app.logger.error("Không tìm thấy file trong yêu cầu.")
+        return jsonify({'error': 'Không tìm thấy file'}), 400
+
+    file = request.files['file']
+    if file.filename == '':
+        app.logger.error("File không hợp lệ (filename rỗng).")
+        return jsonify({'error': 'File không hợp lệ'}), 400
+
+    # Lưu file và dự đoán
+    file_path = os.path.join("data", "received.wav")
+    file.save(file_path)
+
     result = predict_speaker_or_unknown(file_path)
     return jsonify({'result': result})
-    # return jsonify({'result': {"test": "asdg"}})
-
-# Hàm để ghi âm giọng nói
-def record_voice(file_path, seconds=5):
-    FRAM_PER_BUFFER = 3200
-    FORMAT = pyaudio.paInt16
-    CHANNELS = 1
-    RATE = 16000
-    
-    p = pyaudio.PyAudio()
-    
-    stream = p.open(
-        format=FORMAT,
-        channels=CHANNELS,
-        rate=RATE,
-        input=True,
-        frames_per_buffer=FRAM_PER_BUFFER
-    )
-    
-    print("Đang ghi âm...")
-    frames = []
-    
-    for _ in range(0, int(RATE / FRAM_PER_BUFFER * seconds)):
-        data = stream.read(FRAM_PER_BUFFER)
-        frames.append(data)
-    
-    stream.stop_stream()
-    stream.close()
-    p.terminate()
-    
-    # Lưu lại file âm thanh dưới định dạng WAV
-    with wave.open(file_path, "wb") as wf:
-        wf.setnchannels(CHANNELS)
-        wf.setsampwidth(p.get_sample_size(FORMAT))
-        wf.setframerate(RATE)
-        wf.writeframes(b"".join(frames))
-    
-    print("Ghi âm hoàn tất")
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
+    app.run(debug=True, host='0.0.0.0')
