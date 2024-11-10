@@ -38,11 +38,16 @@ def predict_speaker_or_unknown(file_path, threshold=0.7):
 # Route để nhận file WAV và trả về kết quả dự đoán
 @app.route('/predict', methods=['POST'])
 def predict():
+    print(request.files)
+    
     if 'file' not in request.files:
-        app.logger.error("Không tìm thấy file trong yêu cầu.")
+        app.logger.error("loi")
         return jsonify({'error': 'Không tìm thấy file'}), 400
 
+    print('test lan 4')
+
     file = request.files['file']
+    print(file.content_type)
     if file.filename == '':
         app.logger.error("File không hợp lệ (filename rỗng).")
         return jsonify({'error': 'File không hợp lệ'}), 400
@@ -51,8 +56,11 @@ def predict():
     file_path = os.path.join("data", "received.wav")
     file.save(file_path)
 
+    print("test lan 6")
+
     result = predict_speaker_or_unknown(file_path)
-    return jsonify({'result': result})
+    # return jsonify({'result': result})
+    return jsonify({'result': "thanhh cong"})
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
